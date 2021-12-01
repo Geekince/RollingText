@@ -8,11 +8,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Resources
 import android.content.res.TypedArray
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Typeface
+import android.graphics.*
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -29,10 +25,10 @@ import com.yy.mobile.rollingtextview.strategy.Strategy
  */
 @Suppress("MemberVisibilityCanBePrivate")
 open class RollingTextView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0,
-    defStyleRes: Int = 0
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0,
+        defStyleRes: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
     private var lastMeasuredDesiredWidth: Int = 0
@@ -54,13 +50,16 @@ open class RollingTextView @JvmOverloads constructor(
 
     var typeface: Typeface?
         set(value) {
-            textPaint.typeface = when (textStyle) {
-                Typeface.BOLD_ITALIC -> Typeface.create(value, Typeface.BOLD_ITALIC)
-                Typeface.BOLD -> Typeface.create(value, Typeface.BOLD)
-                Typeface.ITALIC -> Typeface.create(value, Typeface.ITALIC)
-                else -> value
+            try {
+                textPaint.typeface = when (textStyle) {
+                    Typeface.BOLD_ITALIC -> Typeface.create(value, Typeface.BOLD_ITALIC)
+                    Typeface.BOLD -> Typeface.create(value, Typeface.BOLD)
+                    Typeface.ITALIC -> Typeface.create(value, Typeface.ITALIC)
+                    else -> value
+                }
+                onTextPaintMeasurementChanged()
+            } catch (e: Exception) {
             }
-            onTextPaintMeasurementChanged()
         }
         get() = textPaint.typeface
 
@@ -71,7 +70,7 @@ open class RollingTextView @JvmOverloads constructor(
         var shadowRadius = 0f
         var text = ""
         var textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
-            12f, context.resources.displayMetrics)
+                12f, context.resources.displayMetrics)
 
         fun applyTypedArray(arr: TypedArray) {
             gravity = arr.getInt(R.styleable.RollingTextView_android_gravity, gravity)
@@ -86,14 +85,13 @@ open class RollingTextView @JvmOverloads constructor(
         }
 
         val arr = context.obtainStyledAttributes(attrs, R.styleable.RollingTextView,
-            defStyleAttr, defStyleRes)
+                defStyleAttr, defStyleRes)
 
         val textAppearanceResId = arr.getResourceId(
-            R.styleable.RollingTextView_android_textAppearance, -1)
+                R.styleable.RollingTextView_android_textAppearance, -1)
 
         if (textAppearanceResId != -1) {
-            val textAppearanceArr = context.obtainStyledAttributes(
-                textAppearanceResId, R.styleable.RollingTextView)
+            val textAppearanceArr = context.obtainStyledAttributes(textAppearanceResId, R.styleable.RollingTextView)
             applyTypedArray(textAppearanceArr)
             textAppearanceArr.recycle()
         }
@@ -102,18 +100,21 @@ open class RollingTextView @JvmOverloads constructor(
 
         animationDuration = arr.getInt(R.styleable.RollingTextView_duration, animationDuration.toInt()).toLong()
 
-        textPaint.isAntiAlias = true
-        if (shadowColor != 0) {
-            textPaint.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor)
-        }
-        if (textStyle != 0) {
-            typeface = textPaint.typeface
-        }
+        try {
+            textPaint.isAntiAlias = true
+            if (shadowColor != 0) {
+                textPaint.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor)
+            }
+            if (textStyle != 0) {
+                typeface = textPaint.typeface
+            }
 
-        setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-        setText(text, false)
-
-        arr.recycle()
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+            setText(text, false)
+        } catch (e: java.lang.Exception) {
+        } finally {
+            arr.recycle()
+        }
 
         animator.addUpdateListener {
             textManager.updateAnimation(it.animatedFraction)
@@ -154,7 +155,7 @@ open class RollingTextView @JvmOverloads constructor(
     override fun onSizeChanged(width: Int, height: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(width, height, oldw, oldh)
         viewBounds.set(paddingLeft, paddingTop, width - paddingRight,
-            height - paddingBottom)
+                height - paddingBottom)
     }
 
     private fun checkForReLayout(): Boolean {
